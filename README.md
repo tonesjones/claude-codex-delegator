@@ -1,62 +1,101 @@
 # codex-delegate
 
-A Claude skill that lets Claude hand tasks to the Codex CLI on your ChatGPT/Codex subscription,
-in any project, locally or in Claude Code cloud sessions.
+codex-delegate is a Claude skill that lets Claude send tasks to the Codex CLI and bill them to
+your ChatGPT plan instead of an API account. Claude stays in charge. It decides what to send,
+picks the model, and checks every file and line Codex cites before it uses the answer.
 
-## 1. Install the skill (once, applies everywhere)
+The skill works in any project, in Claude Code on your machine and in Claude Code cloud sessions.
 
-Build the zip with `python package.py` (writes `dist/codex-delegate.zip`), or download the
-`codex-delegate-skill` artifact from the latest CI run. Upload it in the Skills section of your
-claude.ai settings. Account skills
-sync into the desktop app, Claude Code locally, and cloud sessions, so it is not tied to any
-repository.
+## Install the skill
 
-For Claude Code locally only, you can instead copy the `codex-delegate/` folder into
+1. Build the zip:
+
+   ```bash
+   python package.py
+   ```
+
+   The script writes `dist/codex-delegate.zip`. You can also download the `codex-delegate-skill`
+   artifact from the latest CI run.
+2. Upload the zip in the Skills section of your claude.ai settings.
+
+claude.ai syncs account skills into cloud sessions, so one upload covers every project. If the
+skill doesn't show up in Claude Code on your machine, copy the `codex-delegate/` folder into
 `~/.claude/skills/`.
 
-## 2. Local machine
+## Set up Codex on your machine
 
-Nothing more if `codex` is already installed and you have run `codex login` once. Otherwise
-Claude runs `setup` (installs the CLI with npm) and `login`.
+If you already use Codex and have run `codex login`, there is nothing to do.
 
-## 3. Cloud sessions
+If you haven't, Claude handles it the first time you ask for Codex. It runs
+`codex_bridge.py setup` to install the CLI with npm, then `codex_bridge.py login`, which prints a
+URL and a code for you to approve in your browser. You need Python 3.9 or later, Node.js, and npm.
 
-Cloud containers start empty each session, so Codex needs a login each time. Pick one option:
+## Set up a cloud environment
 
-**A. Device-code login per session (no stored secret).** Claude runs the login, shows you a URL
-and a code, and you approve it in your browser. This takes about 20 seconds per session. If
-ChatGPT says device-code login is disabled, turn it on in your ChatGPT security settings.
+Each cloud session starts in a new container with no Codex login. Choose how Codex logs in, then
+allow the OpenAI hosts.
 
-**B. Stored login (no prompt each session).** In the cloud environment's settings, add an
-environment variable `CODEX_AUTH_JSON` whose value is the full contents of your local
-`~/.codex/auth.json` (on Windows `%USERPROFILE%\.codex\auth.json`). Treat it like a password:
-anyone who can use that environment can spend your subscription. If Codex later refreshes the
-token and the stored copy stops working, copy the file again.
+### Choose how Codex logs in
 
-Whichever you pick, also check in the environment settings:
+Start with the device code. Switch to a stored login if approving a code every session gets old.
 
-- **Network access**: allow `chatgpt.com`, `auth.openai.com` and `api.openai.com` (plus the
-  default package-manager list, so npm can install the CLI).
-- **Setup script** (optional, makes sessions start ready): `npm install -g @openai/codex`
+- **Device code each session.** Claude runs the login and gives you a URL and a code to approve
+  in your browser. It takes about 20 seconds, and the environment stores nothing. If ChatGPT
+  says device-code login is off, turn it on in your ChatGPT security settings.
+- **Stored login.** In the environment's settings, add the variable `CODEX_AUTH_JSON` and set it
+  to the full contents of `~/.codex/auth.json` from your machine. On Windows, the file is
+  `%USERPROFILE%\.codex\auth.json`. Anyone who can start a session in that environment can spend
+  your plan, so treat the value like a password. If Codex refreshes the token and the stored
+  copy stops working, copy the file again.
 
-## 4. Model names
+### Allow the OpenAI hosts
 
-The tiers default to `gpt-6-luna`, `gpt-6-sol` and `gpt-6-astra`. To change them without
-editing the skill, set `CODEX_MODEL_LUNA`, `CODEX_MODEL_SOL` and `CODEX_MODEL_ASTRA`.
+In the environment's network settings, allow these hosts. Keep the default package-manager list
+too, because npm needs it to install the CLI.
 
-## Use
+- `chatgpt.com`
+- `auth.openai.com`
+- `api.openai.com`
 
-Ask Claude something like "use Codex to triage these 40 lint findings" or "get a Sol second
-opinion on this auth change". Claude picks the tier, runs the task, checks every cited line, and
-reports what it kept and what it rejected.
+### Install Codex in the setup script (optional)
 
-## Repository layout
+To start each session with Codex already installed, add this line to the environment's setup
+script:
 
-| Path | What it is |
-|---|---|
-| `codex-delegate/SKILL.md` | Instructions Claude follows: when to delegate, Luna/Sol routing, review rules |
-| `codex-delegate/scripts/codex_bridge.py` | The CLI wrapper: `setup`, `login`, `status`, `run`, `resume` |
-| `tests/` | Tests against a fake `codex` executable (no network, no login) |
-| `package.py` | Builds the uploadable zip |
+```bash
+npm install -g @openai/codex
+```
 
-After changing the skill, run `python -m pytest`, rebuild the zip, and upload it again.
+## Ask Claude to use Codex
+
+Ask in plain words. For example:
+
+- "Use Codex to triage these 40 lint findings."
+- "Get a Sol second opinion on this auth change."
+
+Claude sends bounded, mechanical work to Luna and security-sensitive or judgment-heavy work to
+Sol. It uses Astra only when you name it. Codex runs read-only unless the task has to write
+files, and then it writes only in a separate git worktree. When the answer comes back, Claude
+checks each claim against the code and tells you what it kept and what it threw out.
+
+## Change the model names
+
+The tiers map to `gpt-6-luna`, `gpt-6.1-sol`, and `gpt-6-astra`. To use other models, set
+`CODEX_MODEL_LUNA`, `CODEX_MODEL_SOL`, or `CODEX_MODEL_ASTRA` in the environment. You don't need
+to edit the skill.
+
+## Change the skill
+
+1. Edit the files in `codex-delegate/`.
+2. Run the tests:
+
+   ```bash
+   python -m pytest
+   ```
+
+   The tests use a fake `codex`, so they need no network and no login. They skip on Windows. CI
+   runs them on Linux and macOS.
+3. Rebuild the zip with `python package.py` and upload it again.
+
+For commands, flags, environment variables, exit codes, and the repository layout, see the
+[codex_bridge.py reference](docs/reference.md).
