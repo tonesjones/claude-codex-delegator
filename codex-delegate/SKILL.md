@@ -1,6 +1,6 @@
 ---
 name: codex-delegate
-description: Delegate bounded work to OpenAI Codex (the person's ChatGPT/Codex subscription) through the Codex CLI, with Claude as orchestrator and final reviewer. Routes each task to GPT-6 Luna (bulk, mechanical) or Sol (security-sensitive, judgment), runs tasks in parallel, and verifies every answer before using it. Use when asked to "use Codex", "ask Codex", "route to Luna/Sol", "get a second opinion from GPT", or to fan out bulk reading, triage, test writing, or review across many files. Works in local and cloud sessions.
+description: Delegate bounded work to OpenAI Codex (the person's ChatGPT/Codex subscription) through the Codex CLI, with Claude as orchestrator and final reviewer. Routes each task to GPT-6 Luna (bulk, mechanical) or GPT-6.1 Sol (security-sensitive, judgment), runs tasks in parallel, and verifies every answer before using it. Use when asked to "use Codex", "ask Codex", "route to Luna/Sol", "get a second opinion from GPT", or to fan out bulk reading, triage, test writing, or review across many files. Works in local and cloud sessions.
 ---
 
 # Codex delegate

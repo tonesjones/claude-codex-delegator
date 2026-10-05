@@ -29,7 +29,7 @@ LOCAL_PREFIX = BRIDGE_HOME / "npm"
 # Tier names follow the Luna/Sol policy; override the model ids per environment without editing this file.
 TIERS = {
     "luna": ("CODEX_MODEL_LUNA", "gpt-6-luna"),    # junior: bounded, mechanical, bulk
-    "sol": ("CODEX_MODEL_SOL", "gpt-6-sol"),       # senior: security-sensitive or judgment-heavy
+    "sol": ("CODEX_MODEL_SOL", "gpt-6.1-sol"),     # senior: security-sensitive or judgment-heavy
     "astra": ("CODEX_MODEL_ASTRA", "gpt-6-astra"),  # only when explicitly requested
 }
 

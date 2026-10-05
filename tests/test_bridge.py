@@ -78,6 +78,11 @@ def test_status_reports_tiers_and_logged_out(env):
     assert "tier sol: custom-sol" in r.stdout and "tier luna: gpt-6-luna" in r.stdout
 
 
+def test_sol_tier_defaults_to_gpt_6_1_sol(env):
+    r = bridge(env, "status")
+    assert "tier sol: gpt-6.1-sol" in r.stdout
+
+
 def test_setup_without_credentials_points_to_login(env):
     r = bridge(env, "setup")
     assert r.returncode == 1
